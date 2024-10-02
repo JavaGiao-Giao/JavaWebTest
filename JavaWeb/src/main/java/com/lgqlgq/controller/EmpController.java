@@ -52,4 +52,20 @@ public class EmpController {
         return Result.success();
     }
 
+    //查询回显
+    @GetMapping("/emps/{id}")
+    public Result getEmp(@PathVariable("id") Integer id) {
+        log.info("查询用户id为：{}",id);
+        Emp emp = empService.getEmp(id);
+        return Result.success(emp);
+    }
+
+    //修改用户
+    @PutMapping("/emps")
+    public Result updateEmp(@RequestBody Emp emp) {
+        log.info("编辑用户信息，用户id：{}",emp.getId());
+        empService.updateEmp(emp);
+        return Result.success();
+    }
+
 }
