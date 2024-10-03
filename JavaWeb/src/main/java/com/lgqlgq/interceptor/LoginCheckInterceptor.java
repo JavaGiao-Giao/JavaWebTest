@@ -1,30 +1,20 @@
-package com.lgqlgq.filter;
+package com.lgqlgq.interceptor;
 
 import com.alibaba.fastjson.JSONObject;
 import com.lgqlgq.pojo.Result;
 import com.lgqlgq.utils.JwtUtils;
-import io.jsonwebtoken.Claims;
-import jakarta.servlet.*;
-import jakarta.servlet.annotation.WebFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-
-import java.io.IOException;
-
-/*
-* 该方法以弃用，现使用拦截器方式进行拦截
-* */
+import org.springframework.web.servlet.HandlerInterceptor;
+import org.springframework.web.servlet.ModelAndView;
 
 @Slf4j
-//@WebFilter(urlPatterns = "/*")
-public class LoginCheckFliter implements Filter {
+@Component
+public class LoginCheckInterceptor implements HandlerInterceptor {
     @Override
-    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
-        HttpServletRequest request = (HttpServletRequest) servletRequest;
-        HttpServletResponse response = (HttpServletResponse) servletResponse;
-
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         //获取请求url
         String url = request.getRequestURI().toString();
         log.info("请求的url{}",url);
@@ -33,8 +23,7 @@ public class LoginCheckFliter implements Filter {
         //contains()方法属于java.lang.String类。它用于检查一个字符串是否包含指定的字符序列（子字符串）
         if (url.contains("login")){
             log.info("访问登录界面放行");
-            filterChain.doFilter(request, response);
-            return;
+            return true;
         }
 
         //获取令牌
@@ -48,7 +37,7 @@ public class LoginCheckFliter implements Filter {
             String jsonString = JSONObject.toJSONString(result);
             response.setContentType("application/json;charset=utf-8");
             response.getWriter().write(jsonString);
-            return;
+            return false;
         }
 
         //校验令牌，解析token
@@ -60,10 +49,20 @@ public class LoginCheckFliter implements Filter {
             String jsonString = JSONObject.toJSONString(result);
             response.setContentType("application/json;charset=utf-8");
             response.getWriter().write(jsonString);
-            return;
+            return false;
         }
 
         log.info("令牌合法放行");
-        filterChain.doFilter(request,response);
+        return true;
+    }
+
+    @Override
+    public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) throws Exception {
+        HandlerInterceptor.super.postHandle(request, response, handler, modelAndView);
+    }
+
+    @Override
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
+        HandlerInterceptor.super.afterCompletion(request, response, handler, ex);
     }
 }
